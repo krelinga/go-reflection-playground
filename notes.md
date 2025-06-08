@@ -71,3 +71,9 @@ There are several fairly-common operations I don't love Go's default solutions t
     that you want to match against.
   - This is a cool idea, especially given that you could build up composite matchers that mirror the nested nature
     of a type ... but is also sounds really complicated.
+
+## Where to start?
+
+- I think I want to start by developing a library to capture paths to values within a type.
+  - That seems generally-useful across a bunch of different situations, and will probably help me to get to know
+    reflection better.
