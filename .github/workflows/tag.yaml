@@ -1,0 +1,44 @@
+name: Create Release and Export Version
+
+on:
+  push:
+    tags:
+      - 'v*'  # Trigger only on tags like v1.0.0
+
+permissions:
+  contents: write  # Required to create releases
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: 'stable'
+
+      - name: Install Go dependencies
+        run: go mod download
+
+      - name: Run Go tests
+        run: go test ./...
+
+      - name: Extract version from tag
+        id: get_tag
+        run: echo "TAG=${GITHUB_REF#refs/tags/}" >> $GITHUB_ENV
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ env.TAG }}
+          generate_release_notes: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Export tagged version with go list -m
+        run: |
+          GOPROXY=proxy.golang.org go list -m "github.com/${{ github.repository_owner }}/$(basename ${{ github.repository }})@${{ env.TAG }}"
