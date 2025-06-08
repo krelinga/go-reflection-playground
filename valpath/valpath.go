@@ -141,7 +141,7 @@ func (m MapKey) Traverse(v reflect.Value) (reflect.Value, error) {
 		return zeroValue, ErrTodo
 	}
 
-	return v, nil
+	return key, nil
 }
 
 func (m MapKey) isElement() {}
@@ -164,7 +164,7 @@ func (m MapValueOfKey) Traverse(v reflect.Value) (reflect.Value, error) {
 	if !key.IsValid() {
 		return zeroValue, ErrTodo
 	}
-	if key.Type().AssignableTo(v.Type().Key()) {
+	if !key.Type().AssignableTo(v.Type().Key()) {
 		return zeroValue, ErrTodo
 	}
 

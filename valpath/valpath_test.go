@@ -104,7 +104,7 @@ func TestValPath(t *testing.T) {
 		{
 			name: "slice of int",
 			in:   reflect.ValueOf([]int{1, 2, 3}),
-			sub:  []Sub{
+			sub: []Sub{
 				{
 					name:    "empty path",
 					wantAny: []int{1, 2, 3},
@@ -133,6 +133,46 @@ func TestValPath(t *testing.T) {
 					name:    "map value",
 					path:    valpath.Path{valpath.MapValueOfKey(reflect.ValueOf(string("key")))},
 					wantErr: valpath.ErrTodo,
+				},
+				{
+					name:    "exported field",
+					path:    valpath.Path{valpath.ExportedField("Int")},
+					wantErr: valpath.ErrTodo,
+				},
+			},
+		},
+		{
+			name: "map string to int",
+			in:   reflect.ValueOf(map[string]int{"key": 42}),
+			sub: []Sub{
+				{
+					name:    "empty path",
+					wantAny: map[string]int{"key": 42},
+				},
+				{
+					name:    "deref",
+					path:    valpath.Path{valpath.Deref{}},
+					wantErr: valpath.ErrTodo,
+				},
+				{
+					name:    "interface",
+					path:    valpath.Path{valpath.Inter{}},
+					wantErr: valpath.ErrTodo,
+				},
+				{
+					name:    "index",
+					path:    valpath.Path{valpath.Index(0)},
+					wantErr: valpath.ErrTodo,
+				},
+				{
+					name:    "map key",
+					path:    valpath.Path{valpath.MapKey(reflect.ValueOf(string("key")))},
+					wantAny: string("key"),
+				},
+				{
+					name:    "map value",
+					path:    valpath.Path{valpath.MapValueOfKey(reflect.ValueOf(string("key")))},
+					wantAny: int(42),
 				},
 				{
 					name:    "exported field",
