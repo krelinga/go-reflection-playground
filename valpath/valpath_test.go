@@ -5,83 +5,131 @@ import (
 	"reflect"
 	"testing"
 
+	"github.com/krelinga/go-reflection-playground/testtypes"
 	"github.com/krelinga/go-reflection-playground/valpath"
 )
 
 func TestValPath(t *testing.T) {
-	testCases := []struct {
+	type Sub struct {
 		name    string
 		path    valpath.Path
-		in      reflect.Value
 		wantAny any
 		wantErr error
+	}
+	testCases := []struct {
+		name string
+		in   reflect.Value
+		sub  []Sub
 	}{
 		{
-			name:    "empty path on direct value",
-			in:      reflect.ValueOf(int(42)),
-			wantAny: int(42),
+			name: "direct int value",
+			in:   reflect.ValueOf(int(42)),
+			sub: []Sub{
+				{
+					name:    "empty path",
+					wantAny: int(42),
+				},
+				{
+					name:    "deref",
+					path:    valpath.Path{valpath.Deref{}},
+					wantErr: valpath.ErrTodo,
+				},
+				{
+					name:    "interface",
+					path:    valpath.Path{valpath.Inter{}},
+					wantErr: valpath.ErrTodo,
+				},
+				{
+					name:    "index",
+					path:    valpath.Path{valpath.Index(0)},
+					wantErr: valpath.ErrTodo,
+				},
+				{
+					name:    "map key",
+					path:    valpath.Path{valpath.MapKey(reflect.ValueOf(string("key")))},
+					wantErr: valpath.ErrTodo,
+				},
+				{
+					name:    "map value",
+					path:    valpath.Path{valpath.MapValueOfKey(reflect.ValueOf(string("key")))},
+					wantErr: valpath.ErrTodo,
+				},
+				{
+					name:    "exported field",
+					path:    valpath.Path{valpath.ExportedField("Int")},
+					wantErr: valpath.ErrTodo,
+				},
+			},
 		},
 		{
-			name:    "deref on direct value",
-			path:    valpath.Path{valpath.Deref{}},
-			in:      reflect.ValueOf(int(42)),
-			wantErr: valpath.ErrTodo,
-		},
-		{
-			name:    "interface on direct value",
-			path:    valpath.Path{valpath.Inter{}},
-			in:      reflect.ValueOf(int(42)),
-			wantErr: valpath.ErrTodo,
-		},
-		{
-			name:    "index on direct value",
-			path:    valpath.Path{valpath.Index(0)},
-			in:      reflect.ValueOf(int(42)),
-			wantErr: valpath.ErrTodo,
-		},
-		{
-			name:    "map key on direct value",
-			path:    valpath.Path{valpath.MapKey(reflect.ValueOf(string("key")))},
-			in:      reflect.ValueOf(int(42)),
-			wantErr: valpath.ErrTodo,
-		},
-		{
-			name:    "map value on direct value",
-			path:    valpath.Path{valpath.MapValueOfKey(reflect.ValueOf(string("key")))},
-			in:      reflect.ValueOf(int(42)),
-			wantErr: valpath.ErrTodo,
-		},
-		{
-			name:    "exported field on direct value",
-			path:    valpath.Path{valpath.ExportedField("Int")},
-			in:      reflect.ValueOf(int(42)),
-			wantErr: valpath.ErrTodo,
+			name: "interface value",
+			in:   reflect.ValueOf(testtypes.T10{T9: testtypes.T1(42)}).FieldByName("T9"),
+			sub:  []Sub{
+				{
+					name:    "empty path",
+					wantAny: testtypes.T1(42),
+				},
+				{
+					name:    "deref",
+					path:    valpath.Path{valpath.Deref{}},
+					wantErr: valpath.ErrTodo,
+				},
+				{
+					name:    "interface",
+					path:    valpath.Path{valpath.Inter{}},
+					wantAny: testtypes.T1(42),
+				},
+				{
+					name:    "index",
+					path:    valpath.Path{valpath.Index(0)},
+					wantErr: valpath.ErrTodo,
+				},
+				{
+					name:    "map key",
+					path:    valpath.Path{valpath.MapKey(reflect.ValueOf(string("key")))},
+					wantErr: valpath.ErrTodo,
+				},
+				{
+					name:    "map value",
+					path:    valpath.Path{valpath.MapValueOfKey(reflect.ValueOf(string("key")))},
+					wantErr: valpath.ErrTodo,
+				},
+				{
+					name:    "exported field",
+					path:    valpath.Path{valpath.ExportedField("Int")},
+					wantErr: valpath.ErrTodo,
+				},
+			},
 		},
 		// TODO: start here and add a lot more tests.
 	}
 	for _, tt := range testCases {
 		t.Run(tt.name, func(t *testing.T) {
-			if (tt.wantErr == nil && tt.wantAny == nil) || (tt.wantErr != nil && tt.wantAny != nil) {
-				t.Fatalf("Test case %s: wantErr and wantAny must not be both nil or both non-nil", tt.name)
-			}
+			for _, sub := range tt.sub {
+				t.Run(sub.name, func(t *testing.T) {
+					if (sub.wantErr == nil && sub.wantAny == nil) || (sub.wantErr != nil && sub.wantAny != nil) {
+						t.Fatal("wantErr and wantAny must not be both nil or both non-nil")
+					}
 
-			got, err := tt.path.Traverse(tt.in)
-			if tt.wantErr != nil {
-				if !errors.Is(err, tt.wantErr) {
-					t.Errorf("Test case %s: got error %v, want %v", tt.name, err, tt.wantErr)
-				}
-				if got.IsValid() {
-					t.Errorf("Test case %s: got value %v, want invalid value", tt.name, got)
-				}
-			} else {
-				if err != nil {
-					t.Errorf("Test case %s: got error %v, want no error", tt.name, err)
-				}
-				if !got.IsValid() {
-					t.Errorf("Test case %s: got invalid value, want valid value", tt.name)
-				} else if !reflect.DeepEqual(got.Interface(), tt.wantAny) {
-					t.Errorf("Test case %s: got value %v, want %v", tt.name, got.Interface(), tt.wantAny)
-				}
+					got, err := sub.path.Traverse(tt.in)
+					if sub.wantErr != nil {
+						if !errors.Is(err, sub.wantErr) {
+							t.Errorf("got error %v, want %v", err, sub.wantErr)
+						}
+						if got.IsValid() {
+							t.Errorf("got value %v, want invalid value", got)
+						}
+					} else {
+						if err != nil {
+							t.Errorf("got error %v, want no error", err)
+						}
+						if !got.IsValid() {
+							t.Error("got invalid value, want valid value")
+						} else if !reflect.DeepEqual(got.Interface(), sub.wantAny) {
+							t.Errorf("got value %v, want %v", got.Interface(), sub.wantAny)
+						}
+					}
+				})
 			}
 		})
 	}

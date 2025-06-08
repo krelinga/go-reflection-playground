@@ -37,3 +37,7 @@ type T8 map[T7]T7
 type T9 interface {
 	String() string
 }
+
+type T10 struct {
+	T9 T9
+}
