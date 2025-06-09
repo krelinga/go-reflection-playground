@@ -63,11 +63,11 @@ func TestValPath(t *testing.T) {
 		},
 		{
 			name: "interface value",
-			in:   reflect.ValueOf(testtypes.T10{T9: testtypes.T1(42)}).FieldByName("T9"),
+			in:   testtypes.NewIFaceValue(42),
 			sub: []Sub{
 				{
 					name:    "empty path",
-					wantAny: testtypes.T1(42),
+					wantAny: testtypes.IFaceImpl(42),
 				},
 				{
 					name:    "deref",
@@ -77,7 +77,7 @@ func TestValPath(t *testing.T) {
 				{
 					name:    "interface",
 					path:    valpath.Path{valpath.Inter{}},
-					wantAny: testtypes.T1(42),
+					wantAny: testtypes.IFaceImpl(42),
 				},
 				{
 					name:    "index",
