@@ -46,6 +46,10 @@ func (p Path) Traverse(v reflect.Value) (reflect.Value, error) {
 	return v, nil
 }
 
+func Deref() Elem {
+	return DerefElem{}
+}
+
 type DerefElem struct{}
 
 func (d DerefElem) String() string {
@@ -67,6 +71,10 @@ func (d DerefElem) Traverse(v reflect.Value) (reflect.Value, error) {
 
 func (d DerefElem) isElem() {}
 
+func Inter() Elem {
+	return InterElem{}
+}
+
 type InterElem struct{}
 
 func (i InterElem) String() string {
@@ -87,6 +95,10 @@ func (i InterElem) Traverse(v reflect.Value) (reflect.Value, error) {
 }
 
 func (i InterElem) isElem() {}
+
+func Index(i int) Elem {
+	return IndexElem(i)
+}
 
 type IndexElem int
 
@@ -110,6 +122,10 @@ func (i IndexElem) Traverse(v reflect.Value) (reflect.Value, error) {
 }
 
 func (i IndexElem) isElem() {}
+
+func MapKey[K comparable](k K) Elem {
+	return MapKeyElem(reflect.ValueOf(k))
+}
 
 type MapKeyElem reflect.Value
 
@@ -146,6 +162,10 @@ func (m MapKeyElem) Traverse(v reflect.Value) (reflect.Value, error) {
 
 func (m MapKeyElem) isElem() {}
 
+func MapValueOfKey[K comparable](k K) Elem {
+	return MapValueOfKeyElem(reflect.ValueOf(k))
+}
+
 type MapValueOfKeyElem reflect.Value
 
 func (m MapValueOfKeyElem) String() string {
@@ -180,6 +200,10 @@ func (m MapValueOfKeyElem) Traverse(v reflect.Value) (reflect.Value, error) {
 }
 
 func (m MapValueOfKeyElem) isElem() {}
+
+func ExportedField(name string) Elem {
+	return ExportedFieldElem(name)
+}
 
 type ExportedFieldElem string
 
