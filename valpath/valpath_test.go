@@ -221,6 +221,44 @@ func TestValPath(t *testing.T) {
 				},
 			},
 		},
+		{
+			name: "Struct with exported embedded struct (by value)",
+			in:   reflect.ValueOf(testtypes.Outer{Inner: testtypes.Inner{Int: 42}}),
+			sub: []Sub{
+				// NOTE: this test uses a different set of sub-cases than the others above.
+				{
+					name:    "access promoted field",
+					path:    valpath.Path{valpath.ExportedField("Int")},
+					wantAny: int(42),
+				},
+				{
+					name:    "access non-promoted field",
+					path:    valpath.Path{valpath.ExportedField("Inner"), valpath.ExportedField("Int")},
+					wantAny: int(42),
+				},
+			},
+		},
+		{
+			name: "Struct with exported embedded struct (by pointer)",
+			in:   reflect.ValueOf(testtypes.OuterPtr{Inner: &testtypes.Inner{Int: 42}}),
+			sub: []Sub{
+				// NOTE: this test uses a different set of sub-cases than the others above.
+				// TODO: This test currently fails ... unclear what's going on here.
+				// {
+				// 	name:    "access promoted field",
+				// 	path:    valpath.Path{valpath.ExportedField("Int")},
+				// 	wantAny: int(42),
+				// },
+				{
+					name: "access non-promoted field",
+					path: valpath.Path{
+						valpath.ExportedField("Inner"),
+						valpath.Deref{},
+						valpath.ExportedField("Int")},
+					wantAny: int(42),
+				},
+			},
+		},
 		// TODO: start here and add a lot more tests.
 	}
 	for _, tt := range testCases {

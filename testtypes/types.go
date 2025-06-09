@@ -26,3 +26,7 @@ type Inner struct {
 type Outer struct {
 	Inner
 }
+
+type OuterPtr struct {
+	Inner *Inner
+}
