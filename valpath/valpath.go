@@ -46,13 +46,13 @@ func (p Path) Traverse(v reflect.Value) (reflect.Value, error) {
 	return v, nil
 }
 
-type Deref struct{}
+type DerefElem struct{}
 
-func (d Deref) String() string {
+func (d DerefElem) String() string {
 	return "<deref>"
 }
 
-func (d Deref) Traverse(v reflect.Value) (reflect.Value, error) {
+func (d DerefElem) Traverse(v reflect.Value) (reflect.Value, error) {
 	if !v.IsValid() {
 		return zeroValue, ErrTodo
 	}
@@ -65,15 +65,15 @@ func (d Deref) Traverse(v reflect.Value) (reflect.Value, error) {
 	return v.Elem(), nil
 }
 
-func (d Deref) isElem() {}
+func (d DerefElem) isElem() {}
 
-type Inter struct{}
+type InterElem struct{}
 
-func (i Inter) String() string {
+func (i InterElem) String() string {
 	return "<inter>"
 }
 
-func (i Inter) Traverse(v reflect.Value) (reflect.Value, error) {
+func (i InterElem) Traverse(v reflect.Value) (reflect.Value, error) {
 	if !v.IsValid() {
 		return zeroValue, ErrTodo
 	}
@@ -86,15 +86,15 @@ func (i Inter) Traverse(v reflect.Value) (reflect.Value, error) {
 	return v.Elem(), nil
 }
 
-func (i Inter) isElem() {}
+func (i InterElem) isElem() {}
 
-type Index int
+type IndexElem int
 
-func (i Index) String() string {
+func (i IndexElem) String() string {
 	return fmt.Sprintf("<index %d>", i)
 }
 
-func (i Index) Traverse(v reflect.Value) (reflect.Value, error) {
+func (i IndexElem) Traverse(v reflect.Value) (reflect.Value, error) {
 	if !v.IsValid() {
 		return zeroValue, ErrTodo
 	}
@@ -103,21 +103,21 @@ func (i Index) Traverse(v reflect.Value) (reflect.Value, error) {
 	default:
 		return zeroValue, ErrTodo
 	}
-	if i < 0 || i >= Index(v.Len()) {
+	if i < 0 || i >= IndexElem(v.Len()) {
 		return zeroValue, ErrTodo
 	}
 	return v.Index(int(i)), nil
 }
 
-func (i Index) isElem() {}
+func (i IndexElem) isElem() {}
 
-type MapKey reflect.Value
+type MapKeyElem reflect.Value
 
-func (m MapKey) String() string {
+func (m MapKeyElem) String() string {
 	return fmt.Sprintf("<map key %s>", reflect.Value(m).String())
 }
 
-func (m MapKey) Traverse(v reflect.Value) (reflect.Value, error) {
+func (m MapKeyElem) Traverse(v reflect.Value) (reflect.Value, error) {
 	if !v.IsValid() {
 		return zeroValue, ErrTodo
 	}
@@ -144,15 +144,15 @@ func (m MapKey) Traverse(v reflect.Value) (reflect.Value, error) {
 	return key, nil
 }
 
-func (m MapKey) isElem() {}
+func (m MapKeyElem) isElem() {}
 
-type MapValueOfKey reflect.Value
+type MapValueOfKeyElem reflect.Value
 
-func (m MapValueOfKey) String() string {
+func (m MapValueOfKeyElem) String() string {
 	return fmt.Sprintf("<map value of key %s>", reflect.Value(m).String())
 }
 
-func (m MapValueOfKey) Traverse(v reflect.Value) (reflect.Value, error) {
+func (m MapValueOfKeyElem) Traverse(v reflect.Value) (reflect.Value, error) {
 	if !v.IsValid() {
 		return zeroValue, ErrTodo
 	}
@@ -179,18 +179,18 @@ func (m MapValueOfKey) Traverse(v reflect.Value) (reflect.Value, error) {
 	return val, nil
 }
 
-func (m MapValueOfKey) isElem() {}
+func (m MapValueOfKeyElem) isElem() {}
 
-type ExportedField string
+type ExportedFieldElem string
 
-func (f ExportedField) String() string {
+func (f ExportedFieldElem) String() string {
 	return fmt.Sprintf("<exported field %s>", string(f))
 }
 
 // TODO: currently this supports finding promoted fields from embedded structs.  It isn't clear to me that
 // this is actually something we want to support.  It would mean that there is more than one way to
 // address a field, which seems like it could lead to confusion.
-func (f ExportedField) Traverse(v reflect.Value) (reflect.Value, error) {
+func (f ExportedFieldElem) Traverse(v reflect.Value) (reflect.Value, error) {
 	if !v.IsValid() {
 		return zeroValue, ErrTodo
 	}
@@ -214,4 +214,4 @@ func (f ExportedField) Traverse(v reflect.Value) (reflect.Value, error) {
 	return fieldValue, nil
 }
 
-func (f ExportedField) isElem() {}
+func (f ExportedFieldElem) isElem() {}
