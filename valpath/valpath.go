@@ -3,8 +3,11 @@ package valpath
 import (
 	"errors"
 	"fmt"
+	"iter"
 	"reflect"
 	"strings"
+
+	"github.com/krelinga/go-iters"
 )
 
 var ErrTodo = errors.New("TODO: define a better error for this")
@@ -16,27 +19,34 @@ type Elem interface {
 
 	Traverse(reflect.Value) (reflect.Value, error)
 
+	Elems() iter.Seq[Elem]
+
 	isElem() // Marker method to identify Element types
 }
 
 type Path []Elem
 
 func (p Path) String() string {
-	if len(p) == 0 {
-		return "<empty path>"
-	}
 	b := &strings.Builder{}
-	for i, elem := range p {
-		if i > 0 {
+	for elem := range p.Elems() {
+		if b.Len() > 0 {
 			b.WriteString(" / ")
+		}
+		if elem == nil {
+			b.WriteString("<nil>")
+			continue
 		}
 		b.WriteString(elem.String())
 	}
-	return b.String()
+	if b.Len() == 0 {
+		return "<empty path>"
+	} else {
+		return b.String()
+	}
 }
 
 func (p Path) Traverse(v reflect.Value) (reflect.Value, error) {
-	for _, elem := range p {
+	for elem := range p.Elems() {
 		if val, err := elem.Traverse(v); err != nil {
 			return zeroValue, ErrTodo
 		} else {
@@ -44,6 +54,14 @@ func (p Path) Traverse(v reflect.Value) (reflect.Value, error) {
 		}
 	}
 	return v, nil
+}
+
+func (p Path) Elems() iter.Seq[Elem] {
+	children := make([]iter.Seq[Elem], len(p))
+	for i, elem := range p {
+		children[i] = elem.Elems()
+	}
+	return iters.Concat(children...)
 }
 
 func Deref() Elem {
@@ -71,6 +89,12 @@ func (d DerefElem) Traverse(v reflect.Value) (reflect.Value, error) {
 
 func (d DerefElem) isElem() {}
 
+func (d DerefElem) Elems() iter.Seq[Elem] {
+	return func(yield func(Elem) bool) {
+		yield(d)
+	}
+}
+
 func Inter() Elem {
 	return InterElem{}
 }
@@ -95,6 +119,12 @@ func (i InterElem) Traverse(v reflect.Value) (reflect.Value, error) {
 }
 
 func (i InterElem) isElem() {}
+
+func (i InterElem) Elems() iter.Seq[Elem] {
+	return func(yield func(Elem) bool) {
+		yield(i)
+	}
+}
 
 func Index(i int) Elem {
 	return IndexElem(i)
@@ -122,6 +152,12 @@ func (i IndexElem) Traverse(v reflect.Value) (reflect.Value, error) {
 }
 
 func (i IndexElem) isElem() {}
+
+func (i IndexElem) Elems() iter.Seq[Elem] {
+	return func(yield func(Elem) bool) {
+		yield(i)
+	}
+}
 
 func MapKey[K comparable](k K) Elem {
 	return MapKeyElem(reflect.ValueOf(k))
@@ -162,6 +198,12 @@ func (m MapKeyElem) Traverse(v reflect.Value) (reflect.Value, error) {
 
 func (m MapKeyElem) isElem() {}
 
+func (m MapKeyElem) Elems() iter.Seq[Elem] {
+	return func(yield func(Elem) bool) {
+		yield(m)
+	}
+}
+
 func MapValueOfKey[K comparable](k K) Elem {
 	return MapValueOfKeyElem(reflect.ValueOf(k))
 }
@@ -201,6 +243,12 @@ func (m MapValueOfKeyElem) Traverse(v reflect.Value) (reflect.Value, error) {
 
 func (m MapValueOfKeyElem) isElem() {}
 
+func (m MapValueOfKeyElem) Elems() iter.Seq[Elem] {
+	return func(yield func(Elem) bool) {
+		yield(m)
+	}
+}
+
 func ExportedField(name string) Elem {
 	return ExportedFieldElem(name)
 }
@@ -239,3 +287,9 @@ func (f ExportedFieldElem) Traverse(v reflect.Value) (reflect.Value, error) {
 }
 
 func (f ExportedFieldElem) isElem() {}
+
+func (f ExportedFieldElem) Elems() iter.Seq[Elem] {
+	return func(yield func(Elem) bool) {
+		yield(f)
+	}
+}
