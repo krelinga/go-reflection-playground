@@ -11,15 +11,15 @@ var ErrTodo = errors.New("TODO: define a better error for this")
 
 var zeroValue = reflect.Value{}
 
-type Element interface {
+type Elem interface {
 	String() string
 
 	Traverse(reflect.Value) (reflect.Value, error)
 
-	isElement() // Marker method to identify Element types
+	isElem() // Marker method to identify Element types
 }
 
-type Path []Element
+type Path []Elem
 
 func (p Path) String() string {
 	if len(p) == 0 {
@@ -65,7 +65,7 @@ func (d Deref) Traverse(v reflect.Value) (reflect.Value, error) {
 	return v.Elem(), nil
 }
 
-func (d Deref) isElement() {}
+func (d Deref) isElem() {}
 
 type Inter struct{}
 
@@ -86,7 +86,7 @@ func (i Inter) Traverse(v reflect.Value) (reflect.Value, error) {
 	return v.Elem(), nil
 }
 
-func (i Inter) isElement() {}
+func (i Inter) isElem() {}
 
 type Index int
 
@@ -109,7 +109,7 @@ func (i Index) Traverse(v reflect.Value) (reflect.Value, error) {
 	return v.Index(int(i)), nil
 }
 
-func (i Index) isElement() {}
+func (i Index) isElem() {}
 
 type MapKey reflect.Value
 
@@ -144,7 +144,7 @@ func (m MapKey) Traverse(v reflect.Value) (reflect.Value, error) {
 	return key, nil
 }
 
-func (m MapKey) isElement() {}
+func (m MapKey) isElem() {}
 
 type MapValueOfKey reflect.Value
 
@@ -179,7 +179,7 @@ func (m MapValueOfKey) Traverse(v reflect.Value) (reflect.Value, error) {
 	return val, nil
 }
 
-func (m MapValueOfKey) isElement() {}
+func (m MapValueOfKey) isElem() {}
 
 type ExportedField string
 
@@ -214,4 +214,4 @@ func (f ExportedField) Traverse(v reflect.Value) (reflect.Value, error) {
 	return fieldValue, nil
 }
 
-func (f ExportedField) isElement() {}
+func (f ExportedField) isElem() {}
