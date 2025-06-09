@@ -22,9 +22,13 @@ type Elem interface {
 	Elems() iter.Seq[Elem]
 }
 
-type Path []Elem
+func Path(elems ...Elem) PathElem {
+	return PathElem(elems)
+}
 
-func (p Path) String() string {
+type PathElem []Elem
+
+func (p PathElem) String() string {
 	b := &strings.Builder{}
 	for elem := range p.Elems() {
 		if b.Len() > 0 {
@@ -43,7 +47,7 @@ func (p Path) String() string {
 	}
 }
 
-func (p Path) Traverse(v reflect.Value) (reflect.Value, error) {
+func (p PathElem) Traverse(v reflect.Value) (reflect.Value, error) {
 	for elem := range p.Elems() {
 		if val, err := elem.Traverse(v); err != nil {
 			return zeroValue, ErrTodo
@@ -54,7 +58,7 @@ func (p Path) Traverse(v reflect.Value) (reflect.Value, error) {
 	return v, nil
 }
 
-func (p Path) Elems() iter.Seq[Elem] {
+func (p PathElem) Elems() iter.Seq[Elem] {
 	children := make([]iter.Seq[Elem], len(p))
 	for i, elem := range p {
 		children[i] = elem.Elems()
