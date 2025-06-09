@@ -258,6 +258,26 @@ func TestValPath(t *testing.T) {
 				},
 			},
 		},
+		{
+			name: "Struct with exported embedded struct (by nil pointer)",
+			in:   reflect.ValueOf(testtypes.OuterPtr{Inner: nil}),
+			sub: []Sub{
+				// NOTE: this test uses a different set of sub-cases than the others above.
+				{
+					name:    "access promoted field",
+					path:    valpath.Path{valpath.ExportedField("Int")},
+					wantErr: valpath.ErrTodo,
+				},
+				{
+					name: "access non-promoted field",
+					path: valpath.Path{
+						valpath.ExportedField("Inner"),
+						valpath.Deref{},
+						valpath.ExportedField("Int")},
+					wantErr: valpath.ErrTodo,
+				},
+			},
+		},
 		// TODO: start here and add a lot more tests.
 	}
 	for _, tt := range testCases {

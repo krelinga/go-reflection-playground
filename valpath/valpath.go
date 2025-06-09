@@ -187,6 +187,9 @@ func (f ExportedField) String() string {
 	return fmt.Sprintf("<exported field %s>", string(f))
 }
 
+// TODO: currently this supports finding promoted fields from embedded structs.  It isn't clear to me that
+// this is actually something we want to support.  It would mean that there is more than one way to
+// address a field, which seems like it could lead to confusion.
 func (f ExportedField) Traverse(v reflect.Value) (reflect.Value, error) {
 	if !v.IsValid() {
 		return zeroValue, ErrTodo
@@ -194,13 +197,21 @@ func (f ExportedField) Traverse(v reflect.Value) (reflect.Value, error) {
 	if v.Kind() != reflect.Struct {
 		return zeroValue, ErrTodo
 	}
-
-	field := v.FieldByName(string(f))
-	if !field.IsValid() {
+	t := v.Type()
+	fieldDesc, ok := t.FieldByName(string(f))
+	if !ok {
+		return zeroValue, ErrTodo
+	}
+	if !fieldDesc.IsExported() {
 		return zeroValue, ErrTodo
 	}
 
-	return field, nil
+	fieldValue, err := v.FieldByIndexErr(fieldDesc.Index)
+	if err != nil {
+		// This happens if the field requires traversing a nil pointer.
+		return zeroValue, ErrTodo
+	}
+	return fieldValue, nil
 }
 
 func (f ExportedField) isElement() {}
