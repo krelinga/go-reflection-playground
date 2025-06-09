@@ -181,6 +181,46 @@ func TestValPath(t *testing.T) {
 				},
 			},
 		},
+		{
+			name: "Struct with exported field",
+			in:   reflect.ValueOf(struct{ Int int }{Int: 42}),
+			sub: []Sub{
+				{
+					name:    "empty path",
+					wantAny: struct{ Int int }{Int: 42},
+				},
+				{
+					name:    "deref",
+					path:    valpath.Path{valpath.Deref{}},
+					wantErr: valpath.ErrTodo,
+				},
+				{
+					name:    "interface",
+					path:    valpath.Path{valpath.Inter{}},
+					wantErr: valpath.ErrTodo,
+				},
+				{
+					name:    "index",
+					path:    valpath.Path{valpath.Index(0)},
+					wantErr: valpath.ErrTodo,
+				},
+				{
+					name:    "map key",
+					path:    valpath.Path{valpath.MapKey(reflect.ValueOf(string("key")))},
+					wantErr: valpath.ErrTodo,
+				},
+				{
+					name:    "map value",
+					path:    valpath.Path{valpath.MapValueOfKey(reflect.ValueOf(string("key")))},
+					wantErr: valpath.ErrTodo,
+				},
+				{
+					name:    "exported field",
+					path:    valpath.Path{valpath.ExportedField("Int")},
+					wantAny: int(42),
+				},
+			},
+		},
 		// TODO: start here and add a lot more tests.
 	}
 	for _, tt := range testCases {
