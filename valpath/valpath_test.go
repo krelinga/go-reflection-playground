@@ -243,12 +243,11 @@ func TestValPath(t *testing.T) {
 			in:   reflect.ValueOf(testtypes.OuterPtr{Inner: &testtypes.Inner{Int: 42}}),
 			sub: []Sub{
 				// NOTE: this test uses a different set of sub-cases than the others above.
-				// TODO: This test currently fails ... unclear what's going on here.
-				// {
-				// 	name:    "access promoted field",
-				// 	path:    valpath.Path{valpath.ExportedField("Int")},
-				// 	wantAny: int(42),
-				// },
+				{
+					name:    "access promoted field",
+					path:    valpath.Path{valpath.ExportedField("Int")},
+					wantAny: int(42),
+				},
 				{
 					name: "access non-promoted field",
 					path: valpath.Path{

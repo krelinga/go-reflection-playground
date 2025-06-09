@@ -28,5 +28,5 @@ type Outer struct {
 }
 
 type OuterPtr struct {
-	Inner *Inner
+	*Inner
 }
