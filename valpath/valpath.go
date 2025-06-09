@@ -20,8 +20,6 @@ type Elem interface {
 	Traverse(reflect.Value) (reflect.Value, error)
 
 	Elems() iter.Seq[Elem]
-
-	isElem() // Marker method to identify Element types
 }
 
 type Path []Elem
@@ -87,8 +85,6 @@ func (d DerefElem) Traverse(v reflect.Value) (reflect.Value, error) {
 	return v.Elem(), nil
 }
 
-func (d DerefElem) isElem() {}
-
 func (d DerefElem) Elems() iter.Seq[Elem] {
 	return func(yield func(Elem) bool) {
 		yield(d)
@@ -117,8 +113,6 @@ func (i InterElem) Traverse(v reflect.Value) (reflect.Value, error) {
 	}
 	return v.Elem(), nil
 }
-
-func (i InterElem) isElem() {}
 
 func (i InterElem) Elems() iter.Seq[Elem] {
 	return func(yield func(Elem) bool) {
@@ -150,8 +144,6 @@ func (i IndexElem) Traverse(v reflect.Value) (reflect.Value, error) {
 	}
 	return v.Index(int(i)), nil
 }
-
-func (i IndexElem) isElem() {}
 
 func (i IndexElem) Elems() iter.Seq[Elem] {
 	return func(yield func(Elem) bool) {
@@ -196,8 +188,6 @@ func (m MapKeyElem) Traverse(v reflect.Value) (reflect.Value, error) {
 	return key, nil
 }
 
-func (m MapKeyElem) isElem() {}
-
 func (m MapKeyElem) Elems() iter.Seq[Elem] {
 	return func(yield func(Elem) bool) {
 		yield(m)
@@ -241,8 +231,6 @@ func (m MapValueOfKeyElem) Traverse(v reflect.Value) (reflect.Value, error) {
 	return val, nil
 }
 
-func (m MapValueOfKeyElem) isElem() {}
-
 func (m MapValueOfKeyElem) Elems() iter.Seq[Elem] {
 	return func(yield func(Elem) bool) {
 		yield(m)
@@ -285,8 +273,6 @@ func (f ExportedFieldElem) Traverse(v reflect.Value) (reflect.Value, error) {
 	}
 	return fieldValue, nil
 }
-
-func (f ExportedFieldElem) isElem() {}
 
 func (f ExportedFieldElem) Elems() iter.Seq[Elem] {
 	return func(yield func(Elem) bool) {
