@@ -155,13 +155,12 @@ func (j joinedPat) String() string {
 	return b.String()
 }
 
-// TODO: think real hard about whether or not this is correct... The logic is very fancy (but very concise?).
 func (j joinedPat) Match(v reflect.Value) iter.Seq2[valpath.Path, reflect.Value] {
 	if !v.IsValid() {
 		return iters.Empty2[valpath.Path, reflect.Value]()
 	}
 
-	out := []iters.Pair[valpath.Path, reflect.Value]{}
+	out := slices.Collect(iters.ToPairs(Empty().Match(v)))
 	for elem := range j.elems() {
 		existing := slices.Values(out)
 		newChildren := iters.Map(existing, func(in iters.Pair[valpath.Path, reflect.Value]) iter.Seq[iters.Pair[valpath.Path, reflect.Value]] {
@@ -202,4 +201,8 @@ func (emptyPat) Match(v reflect.Value) iter.Seq2[valpath.Path, reflect.Value] {
 
 func (emptyPat) elems() iter.Seq[Elem] {
 	return iters.Empty[Elem]()
+}
+
+func Empty() Elem {
+	return emptyPat{}
 }
