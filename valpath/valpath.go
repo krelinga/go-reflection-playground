@@ -31,7 +31,7 @@ func Join(children ...Path) Path {
 	children = slices.Collect(notNil)
 	switch len(children) {
 	case 0:
-		return emptyPathElem{}
+		return Empty()
 	case 1:
 		return children[0]
 	default:
