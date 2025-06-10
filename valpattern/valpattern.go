@@ -13,7 +13,7 @@ import (
 type Elem interface {
 	String() string
 	Match(reflect.Value) iter.Seq2[valpath.Path, reflect.Value]
-	Elems() iter.Seq[Elem]
+	elems() iter.Seq[Elem]
 }
 
 func Path(p valpath.Path) PathElem {
@@ -36,7 +36,7 @@ func (p PathElem) Match(v reflect.Value) iter.Seq2[valpath.Path, reflect.Value] 
 	}
 }
 
-func (p PathElem) Elems() iter.Seq[Elem] {
+func (p PathElem) elems() iter.Seq[Elem] {
 	return iters.Single(Elem(p))
 }
 
@@ -62,7 +62,7 @@ func (AllExportedFieldsElem) Match(v reflect.Value) iter.Seq2[valpath.Path, refl
 	return iters.FromPairs(pairs)
 }
 
-func (AllExportedFieldsElem) Elems() iter.Seq[Elem] {
+func (AllExportedFieldsElem) elems() iter.Seq[Elem] {
 	return iters.Single(AllExportedFields())
 }
 
@@ -88,7 +88,7 @@ func (AllMapKeysElem) Match(v reflect.Value) iter.Seq2[valpath.Path, reflect.Val
 	return iters.FromPairs(pairs)
 }
 
-func (AllMapKeysElem) Elems() iter.Seq[Elem] {
+func (AllMapKeysElem) elems() iter.Seq[Elem] {
 	return iters.Single(AllMapKeys())
 }
 
@@ -120,7 +120,7 @@ func (AllMapValuesElem) Match(v reflect.Value) iter.Seq2[valpath.Path, reflect.V
 	})
 }
 
-func (AllMapValuesElem) Elems() iter.Seq[Elem] {
+func (AllMapValuesElem) elems() iter.Seq[Elem] {
 	return iters.Single(AllMapValues())
 }
 
@@ -144,7 +144,7 @@ type joined []Elem
 
 func (j joined) String() string {
 	b := &strings.Builder{}
-	for elem := range j.Elems() {
+	for elem := range j.elems() {
 		if b.Len() > 0 {
 			b.WriteString(" / ")
 		}
@@ -168,7 +168,7 @@ func (j joined) Match(v reflect.Value) iter.Seq2[valpath.Path, reflect.Value] {
 	}
 
 	out := []iters.Pair[valpath.Path, reflect.Value]{}
-	for elem := range j.Elems() {
+	for elem := range j.elems() {
 		existing := slices.Values(out)
 		newChildren := iters.Map(existing, func(in iters.Pair[valpath.Path, reflect.Value]) iter.Seq[iters.Pair[valpath.Path, reflect.Value]] {
 			oldPath := in.One
@@ -185,10 +185,10 @@ func (j joined) Match(v reflect.Value) iter.Seq2[valpath.Path, reflect.Value] {
 	return iters.FromPairs(slices.Values(out))
 }
 
-func (j joined) Elems() iter.Seq[Elem] {
+func (j joined) elems() iter.Seq[Elem] {
 	children := make([]iter.Seq[Elem], len(j))
 	for i, elem := range j {
-		children[i] = elem.Elems()
+		children[i] = elem.elems()
 	}
 	return iters.Concat(children...)
 }

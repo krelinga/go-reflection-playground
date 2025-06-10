@@ -3,5 +3,6 @@
         "krelinga",
         "valpath",
         "testtypes",
+        "valpattern",
     ]
 }
