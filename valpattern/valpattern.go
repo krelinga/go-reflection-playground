@@ -10,13 +10,13 @@ import (
 	"github.com/krelinga/go-reflection-playground/valpath"
 )
 
-type Elem interface {
+type Pattern interface {
 	String() string
 	Match(reflect.Value) iter.Seq2[valpath.Path, reflect.Value]
-	elems() iter.Seq[Elem]
+	elems() iter.Seq[Pattern]
 }
 
-func Path(p valpath.Path) Elem {
+func Path(p valpath.Path) Pattern {
 	return pathPat{p}
 }
 
@@ -36,11 +36,11 @@ func (p pathPat) Match(v reflect.Value) iter.Seq2[valpath.Path, reflect.Value] {
 	}
 }
 
-func (p pathPat) elems() iter.Seq[Elem] {
-	return iters.Single(Elem(p))
+func (p pathPat) elems() iter.Seq[Pattern] {
+	return iters.Single(Pattern(p))
 }
 
-func AllExportedFields() Elem {
+func AllExportedFields() Pattern {
 	return allExportedFieldsPat{}
 }
 
@@ -62,11 +62,11 @@ func (allExportedFieldsPat) Match(v reflect.Value) iter.Seq2[valpath.Path, refle
 	return iters.FromPairs(pairs)
 }
 
-func (allExportedFieldsPat) elems() iter.Seq[Elem] {
+func (allExportedFieldsPat) elems() iter.Seq[Pattern] {
 	return iters.Single(AllExportedFields())
 }
 
-func AllMapKeys() Elem {
+func AllMapKeys() Pattern {
 	return allMapKeysPat{}
 }
 
@@ -88,11 +88,11 @@ func (allMapKeysPat) Match(v reflect.Value) iter.Seq2[valpath.Path, reflect.Valu
 	return iters.FromPairs(pairs)
 }
 
-func (allMapKeysPat) elems() iter.Seq[Elem] {
+func (allMapKeysPat) elems() iter.Seq[Pattern] {
 	return iters.Single(AllMapKeys())
 }
 
-func AllMapValues() Elem {
+func AllMapValues() Pattern {
 	return allMapValuesPat{}
 }
 
@@ -120,16 +120,16 @@ func (allMapValuesPat) Match(v reflect.Value) iter.Seq2[valpath.Path, reflect.Va
 	})
 }
 
-func (allMapValuesPat) elems() iter.Seq[Elem] {
+func (allMapValuesPat) elems() iter.Seq[Pattern] {
 	return iters.Single(AllMapValues())
 }
 
-func Join(children ...Elem) Elem {
+func Join(children ...Pattern) Pattern {
 	asIter := slices.Values(children)
-	nonNil := iters.Filter(asIter, func(e Elem) bool {
+	nonNil := iters.Filter(asIter, func(e Pattern) bool {
 		return e != nil
 	})
-	childrenIters := iters.Map(nonNil, Elem.elems)
+	childrenIters := iters.Map(nonNil, Pattern.elems)
 	children = slices.Collect(iters.Concat(slices.Collect(childrenIters)...))
 
 	switch len(children) {
@@ -142,7 +142,7 @@ func Join(children ...Elem) Elem {
 	}
 }
 
-type joinedPat []Elem
+type joinedPat []Pattern
 
 func (j joinedPat) String() string {
 	b := &strings.Builder{}
@@ -178,8 +178,8 @@ func (j joinedPat) Match(v reflect.Value) iter.Seq2[valpath.Path, reflect.Value]
 	return iters.FromPairs(slices.Values(out))
 }
 
-func (j joinedPat) elems() iter.Seq[Elem] {
-	children := make([]iter.Seq[Elem], len(j))
+func (j joinedPat) elems() iter.Seq[Pattern] {
+	children := make([]iter.Seq[Pattern], len(j))
 	for i, elem := range j {
 		children[i] = elem.elems()
 	}
@@ -199,10 +199,10 @@ func (emptyPat) Match(v reflect.Value) iter.Seq2[valpath.Path, reflect.Value] {
 	return iters.Single2(valpath.Empty(), v)
 }
 
-func (emptyPat) elems() iter.Seq[Elem] {
-	return iters.Empty[Elem]()
+func (emptyPat) elems() iter.Seq[Pattern] {
+	return iters.Empty[Pattern]()
 }
 
-func Empty() Elem {
+func Empty() Pattern {
 	return emptyPat{}
 }
