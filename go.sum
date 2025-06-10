@@ -1,4 +1,8 @@
+github.com/krelinga/go-genmath v1.0.0 h1:wxpILR3e9MaO8BOEin58PiKyWbCzm9+BX7WeGqyGqUo=
+github.com/krelinga/go-genmath v1.0.0/go.mod h1:CBrq0apg2TTiSuZriDlPrbUYdfG0iGBWZA7lK4BdhEs=
 github.com/krelinga/go-iters v0.1.3 h1:ejQVxO8AIT+5983610HXUyYY0mzu1EtuwJfhkGo8jvg=
 github.com/krelinga/go-iters v0.1.3/go.mod h1:R/iHBRUBr1ntOA2gNjmdqPDVpEUgqjVDUGYbJoiZRCk=
+github.com/krelinga/go-sets v1.0.0 h1:8colAL2NOpIQ1qzqeHGSDbxYZlkJwhspEUCMhZbiVdM=
+github.com/krelinga/go-sets v1.0.0/go.mod h1:UMwQqOIdBAwnG/5HeWhDHEQpeff0ANwyBYssx+yC5IA=
 github.com/krelinga/go-views v1.0.0 h1:SwtQFKRIy3YRNQ7Zr9ffIuirmIS0MrdtLA+J39WoM5E=
 github.com/krelinga/go-views v1.0.0/go.mod h1:I2uEw4PIVaZOHVHSUVNHyemc8/oMgVa8sVT2NLkGGg4=
