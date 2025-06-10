@@ -157,10 +157,6 @@ func (j joinedPat) String() string {
 
 // TODO: think real hard about whether or not this is correct... The logic is very fancy (but very concise?).
 func (j joinedPat) Match(v reflect.Value) iter.Seq2[valpath.Path, reflect.Value] {
-	if len(j) == 0 {
-		// TODO: nil isn't a valid value here, decide how to handle this.
-		return iters.Single2(valpath.Path(nil), v)
-	}
 	if !v.IsValid() {
 		return iters.Empty2[valpath.Path, reflect.Value]()
 	}
