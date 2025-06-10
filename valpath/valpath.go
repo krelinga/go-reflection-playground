@@ -28,7 +28,9 @@ func Join(children ...Path) Path {
 	notNil := iters.Filter(asIter, func(e Path) bool {
 		return e != nil
 	})
-	children = slices.Collect(notNil)
+	childLists := iters.Map(notNil, Path.elems)
+	children = slices.Collect(iters.Concat(slices.Collect(childLists)...))
+
 	switch len(children) {
 	case 0:
 		return Empty()
