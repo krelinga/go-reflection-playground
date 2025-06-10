@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"iter"
 	"reflect"
+	"slices"
 	"strings"
 
 	"github.com/krelinga/go-iters"
@@ -14,23 +15,56 @@ var ErrTodo = errors.New("TODO: define a better error for this")
 
 var zeroValue = reflect.Value{}
 
-type Elem interface {
+type Path interface {
 	String() string
 
 	Traverse(reflect.Value) (reflect.Value, error)
 
-	Elems() iter.Seq[Elem]
+	elems() iter.Seq[Path]
 }
 
-func Path(elems ...Elem) PathElem {
-	return PathElem(elems)
+func Join(children ...Path) Path {
+	asIter := slices.Values(children)
+	notNil := iters.Filter(asIter, func(e Path) bool {
+		return e != nil
+	})
+	children = slices.Collect(notNil)
+	switch len(children) {
+	case 0:
+		return emptyPathElem{}
+	case 1:
+		return children[0]
+	default:
+		return pathListElem(children)
+	}
 }
 
-type PathElem []Elem
+func Empty() Path {
+	return emptyPathElem{}
+}
 
-func (p PathElem) String() string {
+type emptyPathElem struct{}
+
+func (e emptyPathElem) String() string {
+	return "<empty path>"
+}
+
+func (e emptyPathElem) Traverse(v reflect.Value) (reflect.Value, error) {
+	if !v.IsValid() {
+		return zeroValue, ErrTodo
+	}
+	return v, nil
+}
+
+func (e emptyPathElem) elems() iter.Seq[Path] {
+	return iters.Empty[Path]()
+}
+
+type pathListElem []Path
+
+func (p pathListElem) String() string {
 	b := &strings.Builder{}
-	for elem := range p.Elems() {
+	for elem := range p.elems() {
 		if b.Len() > 0 {
 			b.WriteString(" / ")
 		}
@@ -40,15 +74,11 @@ func (p PathElem) String() string {
 		}
 		b.WriteString(elem.String())
 	}
-	if b.Len() == 0 {
-		return "<empty path>"
-	} else {
-		return b.String()
-	}
+	return b.String()
 }
 
-func (p PathElem) Traverse(v reflect.Value) (reflect.Value, error) {
-	for elem := range p.Elems() {
+func (p pathListElem) Traverse(v reflect.Value) (reflect.Value, error) {
+	for elem := range p.elems() {
 		if val, err := elem.Traverse(v); err != nil {
 			return zeroValue, ErrTodo
 		} else {
@@ -58,25 +88,25 @@ func (p PathElem) Traverse(v reflect.Value) (reflect.Value, error) {
 	return v, nil
 }
 
-func (p PathElem) Elems() iter.Seq[Elem] {
-	children := make([]iter.Seq[Elem], len(p))
+func (p pathListElem) elems() iter.Seq[Path] {
+	children := make([]iter.Seq[Path], len(p))
 	for i, elem := range p {
-		children[i] = elem.Elems()
+		children[i] = elem.elems()
 	}
 	return iters.Concat(children...)
 }
 
-func Deref() Elem {
-	return DerefElem{}
+func Deref() Path {
+	return DerefPart{}
 }
 
-type DerefElem struct{}
+type DerefPart struct{}
 
-func (d DerefElem) String() string {
+func (d DerefPart) String() string {
 	return "<deref>"
 }
 
-func (d DerefElem) Traverse(v reflect.Value) (reflect.Value, error) {
+func (d DerefPart) Traverse(v reflect.Value) (reflect.Value, error) {
 	if !v.IsValid() {
 		return zeroValue, ErrTodo
 	}
@@ -89,23 +119,23 @@ func (d DerefElem) Traverse(v reflect.Value) (reflect.Value, error) {
 	return v.Elem(), nil
 }
 
-func (d DerefElem) Elems() iter.Seq[Elem] {
-	return func(yield func(Elem) bool) {
+func (d DerefPart) elems() iter.Seq[Path] {
+	return func(yield func(Path) bool) {
 		yield(d)
 	}
 }
 
-func Inter() Elem {
-	return InterElem{}
+func Inter() Path {
+	return InterPart{}
 }
 
-type InterElem struct{}
+type InterPart struct{}
 
-func (i InterElem) String() string {
+func (i InterPart) String() string {
 	return "<inter>"
 }
 
-func (i InterElem) Traverse(v reflect.Value) (reflect.Value, error) {
+func (i InterPart) Traverse(v reflect.Value) (reflect.Value, error) {
 	if !v.IsValid() {
 		return zeroValue, ErrTodo
 	}
@@ -118,23 +148,23 @@ func (i InterElem) Traverse(v reflect.Value) (reflect.Value, error) {
 	return v.Elem(), nil
 }
 
-func (i InterElem) Elems() iter.Seq[Elem] {
-	return func(yield func(Elem) bool) {
+func (i InterPart) elems() iter.Seq[Path] {
+	return func(yield func(Path) bool) {
 		yield(i)
 	}
 }
 
-func Index(i int) Elem {
-	return IndexElem(i)
+func Index(i int) Path {
+	return IndexPart(i)
 }
 
-type IndexElem int
+type IndexPart int
 
-func (i IndexElem) String() string {
+func (i IndexPart) String() string {
 	return fmt.Sprintf("<index %d>", i)
 }
 
-func (i IndexElem) Traverse(v reflect.Value) (reflect.Value, error) {
+func (i IndexPart) Traverse(v reflect.Value) (reflect.Value, error) {
 	if !v.IsValid() {
 		return zeroValue, ErrTodo
 	}
@@ -143,29 +173,29 @@ func (i IndexElem) Traverse(v reflect.Value) (reflect.Value, error) {
 	default:
 		return zeroValue, ErrTodo
 	}
-	if i < 0 || i >= IndexElem(v.Len()) {
+	if i < 0 || i >= IndexPart(v.Len()) {
 		return zeroValue, ErrTodo
 	}
 	return v.Index(int(i)), nil
 }
 
-func (i IndexElem) Elems() iter.Seq[Elem] {
-	return func(yield func(Elem) bool) {
+func (i IndexPart) elems() iter.Seq[Path] {
+	return func(yield func(Path) bool) {
 		yield(i)
 	}
 }
 
-func MapKey[K comparable](k K) Elem {
-	return MapKeyElem(reflect.ValueOf(k))
+func MapKey[K comparable](k K) Path {
+	return MapKeyPart(reflect.ValueOf(k))
 }
 
-type MapKeyElem reflect.Value
+type MapKeyPart reflect.Value
 
-func (m MapKeyElem) String() string {
+func (m MapKeyPart) String() string {
 	return fmt.Sprintf("<map key %s>", reflect.Value(m).String())
 }
 
-func (m MapKeyElem) Traverse(v reflect.Value) (reflect.Value, error) {
+func (m MapKeyPart) Traverse(v reflect.Value) (reflect.Value, error) {
 	if !v.IsValid() {
 		return zeroValue, ErrTodo
 	}
@@ -192,23 +222,23 @@ func (m MapKeyElem) Traverse(v reflect.Value) (reflect.Value, error) {
 	return key, nil
 }
 
-func (m MapKeyElem) Elems() iter.Seq[Elem] {
-	return func(yield func(Elem) bool) {
+func (m MapKeyPart) elems() iter.Seq[Path] {
+	return func(yield func(Path) bool) {
 		yield(m)
 	}
 }
 
-func MapValueOfKey[K comparable](k K) Elem {
-	return MapValueOfKeyElem(reflect.ValueOf(k))
+func MapValueOfKey[K comparable](k K) Path {
+	return MapValueOfKeyPart(reflect.ValueOf(k))
 }
 
-type MapValueOfKeyElem reflect.Value
+type MapValueOfKeyPart reflect.Value
 
-func (m MapValueOfKeyElem) String() string {
+func (m MapValueOfKeyPart) String() string {
 	return fmt.Sprintf("<map value of key %s>", reflect.Value(m).String())
 }
 
-func (m MapValueOfKeyElem) Traverse(v reflect.Value) (reflect.Value, error) {
+func (m MapValueOfKeyPart) Traverse(v reflect.Value) (reflect.Value, error) {
 	if !v.IsValid() {
 		return zeroValue, ErrTodo
 	}
@@ -235,26 +265,26 @@ func (m MapValueOfKeyElem) Traverse(v reflect.Value) (reflect.Value, error) {
 	return val, nil
 }
 
-func (m MapValueOfKeyElem) Elems() iter.Seq[Elem] {
-	return func(yield func(Elem) bool) {
+func (m MapValueOfKeyPart) elems() iter.Seq[Path] {
+	return func(yield func(Path) bool) {
 		yield(m)
 	}
 }
 
-func ExportedField(name string) Elem {
-	return ExportedFieldElem(name)
+func ExportedField(name string) Path {
+	return ExportedFieldPart(name)
 }
 
-type ExportedFieldElem string
+type ExportedFieldPart string
 
-func (f ExportedFieldElem) String() string {
+func (f ExportedFieldPart) String() string {
 	return fmt.Sprintf("<exported field %s>", string(f))
 }
 
 // TODO: currently this supports finding promoted fields from embedded structs.  It isn't clear to me that
 // this is actually something we want to support.  It would mean that there is more than one way to
 // address a field, which seems like it could lead to confusion.
-func (f ExportedFieldElem) Traverse(v reflect.Value) (reflect.Value, error) {
+func (f ExportedFieldPart) Traverse(v reflect.Value) (reflect.Value, error) {
 	if !v.IsValid() {
 		return zeroValue, ErrTodo
 	}
@@ -278,8 +308,8 @@ func (f ExportedFieldElem) Traverse(v reflect.Value) (reflect.Value, error) {
 	return fieldValue, nil
 }
 
-func (f ExportedFieldElem) Elems() iter.Seq[Elem] {
-	return func(yield func(Elem) bool) {
+func (f ExportedFieldPart) elems() iter.Seq[Path] {
+	return func(yield func(Path) bool) {
 		yield(f)
 	}
 }

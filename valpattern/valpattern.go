@@ -12,25 +12,25 @@ import (
 
 type Elem interface {
 	String() string
-	Match(reflect.Value) iter.Seq2[valpath.Elem, reflect.Value]
+	Match(reflect.Value) iter.Seq2[valpath.Path, reflect.Value]
 	Elems() iter.Seq[Elem]
 }
 
-func Path(p valpath.Elem) PathElem {
+func Path(p valpath.Path) PathElem {
 	return PathElem{p}
 }
 
 type PathElem struct {
-	Path valpath.Elem
+	Path valpath.Path
 }
 
 func (p PathElem) String() string {
 	return p.Path.String()
 }
 
-func (p PathElem) Match(v reflect.Value) iter.Seq2[valpath.Elem, reflect.Value] {
+func (p PathElem) Match(v reflect.Value) iter.Seq2[valpath.Path, reflect.Value] {
 	if found, err := p.Path.Traverse(v); err != nil {
-		return iters.Empty2[valpath.Elem, reflect.Value]()
+		return iters.Empty2[valpath.Path, reflect.Value]()
 	} else {
 		return iters.Single2((p.Path), found)
 	}
@@ -50,13 +50,13 @@ func (AllExportedFieldsElem) String() string {
 	return "<all exported fields>"
 }
 
-func (AllExportedFieldsElem) Match(v reflect.Value) iter.Seq2[valpath.Elem, reflect.Value] {
+func (AllExportedFieldsElem) Match(v reflect.Value) iter.Seq2[valpath.Path, reflect.Value] {
 	if !v.IsValid() || v.Kind() != reflect.Struct {
-		return iters.Empty2[valpath.Elem, reflect.Value]()
+		return iters.Empty2[valpath.Path, reflect.Value]()
 	}
 	allFields := slices.Values(reflect.VisibleFields(v.Type()))
 	exportedFields := iters.Filter(allFields, reflect.StructField.IsExported)
-	pairs := iters.Map(exportedFields, func(f reflect.StructField) iters.Pair[valpath.Elem, reflect.Value] {
+	pairs := iters.Map(exportedFields, func(f reflect.StructField) iters.Pair[valpath.Path, reflect.Value] {
 		return iters.NewPair(valpath.ExportedField(f.Name), v.FieldByName(f.Name))
 	})
 	return iters.FromPairs(pairs)
@@ -76,13 +76,13 @@ func (AllMapKeysElem) String() string {
 	return "<all map keys>"
 }
 
-func (AllMapKeysElem) Match(v reflect.Value) iter.Seq2[valpath.Elem, reflect.Value] {
+func (AllMapKeysElem) Match(v reflect.Value) iter.Seq2[valpath.Path, reflect.Value] {
 	if !v.IsValid() || v.Kind() != reflect.Map || v.IsNil() {
-		return iters.Empty2[valpath.Elem, reflect.Value]()
+		return iters.Empty2[valpath.Path, reflect.Value]()
 	}
 
 	keys := slices.Values(v.MapKeys())
-	pairs := iters.Map(keys, func(k reflect.Value) iters.Pair[valpath.Elem, reflect.Value] {
+	pairs := iters.Map(keys, func(k reflect.Value) iters.Pair[valpath.Path, reflect.Value] {
 		return iters.NewPair(valpath.MapKey(k), v.MapIndex(k))
 	})
 	return iters.FromPairs(pairs)
@@ -102,9 +102,9 @@ func (AllMapValuesElem) String() string {
 	return "<all map values>"
 }
 
-func (AllMapValuesElem) Match(v reflect.Value) iter.Seq2[valpath.Elem, reflect.Value] {
+func (AllMapValuesElem) Match(v reflect.Value) iter.Seq2[valpath.Path, reflect.Value] {
 	if !v.IsValid() || v.Kind() != reflect.Map || v.IsNil() {
-		return iters.Empty2[valpath.Elem, reflect.Value]()
+		return iters.Empty2[valpath.Path, reflect.Value]()
 	}
 
 	entries := func(yield func(k, v reflect.Value) bool) {
@@ -115,7 +115,7 @@ func (AllMapValuesElem) Match(v reflect.Value) iter.Seq2[valpath.Elem, reflect.V
 			}
 		}
 	}
-	return iters.Map2(entries, func(k, v reflect.Value) (valpath.Elem, reflect.Value) {
+	return iters.Map2(entries, func(k, v reflect.Value) (valpath.Path, reflect.Value) {
 		return valpath.MapValueOfKey(k), v
 	})
 }
@@ -158,24 +158,24 @@ func (j joined) String() string {
 }
 
 // TODO: think real hard about whether or not this is correct... The logic is very fancy (but very concise?).
-func (j joined) Match(v reflect.Value) iter.Seq2[valpath.Elem, reflect.Value] {
+func (j joined) Match(v reflect.Value) iter.Seq2[valpath.Path, reflect.Value] {
 	if len(j) == 0 {
 		// TODO: nil isn't a valid value here, decide how to handle this.
-		return iters.Single2(valpath.Elem(nil), v)
+		return iters.Single2(valpath.Path(nil), v)
 	}
 	if !v.IsValid() {
-		return iters.Empty2[valpath.Elem, reflect.Value]()
+		return iters.Empty2[valpath.Path, reflect.Value]()
 	}
 
-	out := []iters.Pair[valpath.Elem, reflect.Value]{}
+	out := []iters.Pair[valpath.Path, reflect.Value]{}
 	for elem := range j.Elems() {
 		existing := slices.Values(out)
-		newChildren := iters.Map(existing, func(in iters.Pair[valpath.Elem, reflect.Value]) iter.Seq[iters.Pair[valpath.Elem, reflect.Value]] {
+		newChildren := iters.Map(existing, func(in iters.Pair[valpath.Path, reflect.Value]) iter.Seq[iters.Pair[valpath.Path, reflect.Value]] {
 			oldPath := in.One
 			oldVal := in.Two
 			matches := elem.Match(oldVal)
-			withFixedPath := iters.Map2(matches, func(p valpath.Elem, v reflect.Value) (valpath.Elem, reflect.Value) {
-				return valpath.Path(oldPath, p), v
+			withFixedPath := iters.Map2(matches, func(p valpath.Path, v reflect.Value) (valpath.Path, reflect.Value) {
+				return valpath.Join(oldPath, p), v
 			})
 			return iters.ToPairs(withFixedPath)
 		})

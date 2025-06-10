@@ -12,7 +12,7 @@ import (
 func TestValPath(t *testing.T) {
 	type Sub struct {
 		name    string
-		path    valpath.PathElem
+		path    valpath.Path
 		wantAny any
 		wantErr error
 	}
@@ -27,36 +27,37 @@ func TestValPath(t *testing.T) {
 			sub: []Sub{
 				{
 					name:    "empty path",
+					path:   valpath.Empty(),
 					wantAny: int(42),
 				},
 				{
 					name:    "deref",
-					path:    valpath.Path(valpath.Deref()),
+					path:    valpath.Join(valpath.Deref()),
 					wantErr: valpath.ErrTodo,
 				},
 				{
 					name:    "interface",
-					path:    valpath.Path(valpath.Inter()),
+					path:    valpath.Join(valpath.Inter()),
 					wantErr: valpath.ErrTodo,
 				},
 				{
 					name:    "index",
-					path:    valpath.Path(valpath.Index(0)),
+					path:    valpath.Join(valpath.Index(0)),
 					wantErr: valpath.ErrTodo,
 				},
 				{
 					name:    "map key",
-					path:    valpath.Path(valpath.MapKey("key")),
+					path:    valpath.Join(valpath.MapKey("key")),
 					wantErr: valpath.ErrTodo,
 				},
 				{
 					name:    "map value",
-					path:    valpath.Path(valpath.MapValueOfKey("key")),
+					path:    valpath.Join(valpath.MapValueOfKey("key")),
 					wantErr: valpath.ErrTodo,
 				},
 				{
 					name:    "exported field",
-					path:    valpath.Path(valpath.ExportedField("Int")),
+					path:    valpath.Join(valpath.ExportedField("Int")),
 					wantErr: valpath.ErrTodo,
 				},
 			},
@@ -67,36 +68,37 @@ func TestValPath(t *testing.T) {
 			sub: []Sub{
 				{
 					name:    "empty path",
+					path:   valpath.Empty(),
 					wantAny: testtypes.IFaceImpl(42),
 				},
 				{
 					name:    "deref",
-					path:    valpath.Path(valpath.Deref()),
+					path:    valpath.Join(valpath.Deref()),
 					wantErr: valpath.ErrTodo,
 				},
 				{
 					name:    "interface",
-					path:    valpath.Path(valpath.Inter()),
+					path:    valpath.Join(valpath.Inter()),
 					wantAny: testtypes.IFaceImpl(42),
 				},
 				{
 					name:    "index",
-					path:    valpath.Path(valpath.Index(0)),
+					path:    valpath.Join(valpath.Index(0)),
 					wantErr: valpath.ErrTodo,
 				},
 				{
 					name:    "map key",
-					path:    valpath.Path(valpath.MapKey("key")),
+					path:    valpath.Join(valpath.MapKey("key")),
 					wantErr: valpath.ErrTodo,
 				},
 				{
 					name:    "map value",
-					path:    valpath.Path(valpath.MapValueOfKey("key")),
+					path:    valpath.Join(valpath.MapValueOfKey("key")),
 					wantErr: valpath.ErrTodo,
 				},
 				{
 					name:    "exported field",
-					path:    valpath.Path(valpath.ExportedField("Int")),
+					path:    valpath.Join(valpath.ExportedField("Int")),
 					wantErr: valpath.ErrTodo,
 				},
 			},
@@ -107,36 +109,37 @@ func TestValPath(t *testing.T) {
 			sub: []Sub{
 				{
 					name:    "empty path",
+					path:  valpath.Empty(),
 					wantAny: []int{1, 2, 3},
 				},
 				{
 					name:    "deref",
-					path:    valpath.Path(valpath.Deref()),
+					path:    valpath.Join(valpath.Deref()),
 					wantErr: valpath.ErrTodo,
 				},
 				{
 					name:    "interface",
-					path:    valpath.Path(valpath.Inter()),
+					path:    valpath.Join(valpath.Inter()),
 					wantErr: valpath.ErrTodo,
 				},
 				{
 					name:    "index",
-					path:    valpath.Path(valpath.Index(0)),
+					path:    valpath.Join(valpath.Index(0)),
 					wantAny: int(1),
 				},
 				{
 					name:    "map key",
-					path:    valpath.Path(valpath.MapKey("key")),
+					path:    valpath.Join(valpath.MapKey("key")),
 					wantErr: valpath.ErrTodo,
 				},
 				{
 					name:    "map value",
-					path:    valpath.Path(valpath.MapValueOfKey("key")),
+					path:    valpath.Join(valpath.MapValueOfKey("key")),
 					wantErr: valpath.ErrTodo,
 				},
 				{
 					name:    "exported field",
-					path:    valpath.Path(valpath.ExportedField("Int")),
+					path:    valpath.Join(valpath.ExportedField("Int")),
 					wantErr: valpath.ErrTodo,
 				},
 			},
@@ -147,36 +150,37 @@ func TestValPath(t *testing.T) {
 			sub: []Sub{
 				{
 					name:    "empty path",
+					path:   valpath.Empty(),
 					wantAny: map[string]int{"key": 42},
 				},
 				{
 					name:    "deref",
-					path:    valpath.Path(valpath.Deref()),
+					path:    valpath.Join(valpath.Deref()),
 					wantErr: valpath.ErrTodo,
 				},
 				{
 					name:    "interface",
-					path:    valpath.Path(valpath.Inter()),
+					path:    valpath.Join(valpath.Inter()),
 					wantErr: valpath.ErrTodo,
 				},
 				{
 					name:    "index",
-					path:    valpath.Path(valpath.Index(0)),
+					path:    valpath.Join(valpath.Index(0)),
 					wantErr: valpath.ErrTodo,
 				},
 				{
 					name:    "map key",
-					path:    valpath.Path(valpath.MapKey("key")),
+					path:    valpath.Join(valpath.MapKey("key")),
 					wantAny: string("key"),
 				},
 				{
 					name:    "map value",
-					path:    valpath.Path(valpath.MapValueOfKey("key")),
+					path:    valpath.Join(valpath.MapValueOfKey("key")),
 					wantAny: int(42),
 				},
 				{
 					name:    "exported field",
-					path:    valpath.Path(valpath.ExportedField("Int")),
+					path:    valpath.Join(valpath.ExportedField("Int")),
 					wantErr: valpath.ErrTodo,
 				},
 			},
@@ -187,36 +191,37 @@ func TestValPath(t *testing.T) {
 			sub: []Sub{
 				{
 					name:    "empty path",
+					path:  valpath.Empty(),
 					wantAny: struct{ Int int }{Int: 42},
 				},
 				{
 					name:    "deref",
-					path:    valpath.Path(valpath.Deref()),
+					path:    valpath.Join(valpath.Deref()),
 					wantErr: valpath.ErrTodo,
 				},
 				{
 					name:    "interface",
-					path:    valpath.Path(valpath.Inter()),
+					path:    valpath.Join(valpath.Inter()),
 					wantErr: valpath.ErrTodo,
 				},
 				{
 					name:    "index",
-					path:    valpath.Path(valpath.Index(0)),
+					path:    valpath.Join(valpath.Index(0)),
 					wantErr: valpath.ErrTodo,
 				},
 				{
 					name:    "map key",
-					path:    valpath.Path(valpath.MapKey("key")),
+					path:    valpath.Join(valpath.MapKey("key")),
 					wantErr: valpath.ErrTodo,
 				},
 				{
 					name:    "map value",
-					path:    valpath.Path(valpath.MapValueOfKey("key")),
+					path:    valpath.Join(valpath.MapValueOfKey("key")),
 					wantErr: valpath.ErrTodo,
 				},
 				{
 					name:    "exported field",
-					path:    valpath.Path(valpath.ExportedField("Int")),
+					path:    valpath.Join(valpath.ExportedField("Int")),
 					wantAny: int(42),
 				},
 			},
@@ -228,12 +233,12 @@ func TestValPath(t *testing.T) {
 				// NOTE: this test uses a different set of sub-cases than the others above.
 				{
 					name:    "access promoted field",
-					path:    valpath.Path(valpath.ExportedField("Int")),
+					path:    valpath.Join(valpath.ExportedField("Int")),
 					wantAny: int(42),
 				},
 				{
 					name:    "access non-promoted field",
-					path:    valpath.Path(valpath.ExportedField("Inner"), valpath.ExportedField("Int")),
+					path:    valpath.Join(valpath.ExportedField("Inner"), valpath.ExportedField("Int")),
 					wantAny: int(42),
 				},
 			},
@@ -245,12 +250,12 @@ func TestValPath(t *testing.T) {
 				// NOTE: this test uses a different set of sub-cases than the others above.
 				{
 					name:    "access promoted field",
-					path:    valpath.Path(valpath.ExportedField("Int")),
+					path:    valpath.Join(valpath.ExportedField("Int")),
 					wantAny: int(42),
 				},
 				{
 					name: "access non-promoted field",
-					path: valpath.Path(
+					path: valpath.Join(
 						valpath.ExportedField("Inner"),
 						valpath.Deref(),
 						valpath.ExportedField("Int")),
@@ -265,12 +270,12 @@ func TestValPath(t *testing.T) {
 				// NOTE: this test uses a different set of sub-cases than the others above.
 				{
 					name:    "access promoted field",
-					path:    valpath.Path(valpath.ExportedField("Int")),
+					path:    valpath.Join(valpath.ExportedField("Int")),
 					wantErr: valpath.ErrTodo,
 				},
 				{
 					name: "access non-promoted field",
-					path: valpath.Path(
+					path: valpath.Join(
 						valpath.ExportedField("Inner"),
 						valpath.Deref(),
 						valpath.ExportedField("Int")),
